@@ -18,7 +18,6 @@ repositories {
 dependencies {
   compile 'org.reflections:reflections:0.9.10'
   compile files('lib/tinyb.jar')
-  testCompile 'junit:junit:4.12'
 }
 
 /*
