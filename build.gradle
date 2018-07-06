@@ -2,14 +2,14 @@ buildscript {
   repositories {
     jcenter()
   }
-  
+  /*
   dependencies {
     classpath 'com.moowork.gradle:gradle-node-plugin:0.13'
-  }
+  }*/
 }
 
 apply plugin: 'java'
-apply plugin: 'com.moowork.node'
+//apply plugin: 'com.moowork.node'
 
 repositories {
   jcenter()
@@ -17,8 +17,11 @@ repositories {
 
 dependencies {
   compile 'org.reflections:reflections:0.9.10'
+  compile files('lib/tinyb.jar')
+  testCompile 'junit:junit:4.12'
 }
 
+/*
 node {
   version = '4.4.7'
   npmVersion = '3.10.5'
@@ -28,6 +31,7 @@ node {
   workDir = file("${project.buildDir}/nodejs")
   nodeModulesDir = file("${project.projectDir}")
 }
+*/
 
 task fatJar(type: Jar) {
     baseName = project.name + '-all'
@@ -35,4 +39,4 @@ task fatJar(type: Jar) {
     with jar
 }
 
-processResources.dependsOn(['npmInstall'])
+//processResources.dependsOn(['npmInstall'])
