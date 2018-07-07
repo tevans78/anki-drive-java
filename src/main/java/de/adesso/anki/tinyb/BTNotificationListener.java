@@ -7,20 +7,22 @@ import de.adesso.anki.Vehicle;
 import de.adesso.anki.messages.Message;
 import tinyb.BluetoothNotification;
 
-public class NotificationListener implements BluetoothNotification<byte[]> {
+public class BTNotificationListener implements BluetoothNotification<byte[]> {
 
     private Vehicle vehicle;
-    private AnkiConnector anki;
+    private AnkiConnector ankiConnector;
 
-    public NotificationListener(Vehicle vehicle, AnkiConnector anki) {
+    public BTNotificationListener(Vehicle vehicle, AnkiConnector ankiConnector) {
         this.vehicle = vehicle;
-        this.anki = anki;
+        this.ankiConnector = ankiConnector;
     }
 
     @Override
     public void run(byte[] arg0) {
+        System.out.println("notification: +" + vehicle.getAddress());
         Message message = Message.parse(DatatypeConverter.printHexBinary(arg0));
-        System.out.println("Notification: " + message);
+        System.out.println(message.getClass());
+        ankiConnector.fireMessageReceived(vehicle, message);
     }
 
 }

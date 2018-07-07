@@ -14,7 +14,6 @@ import com.google.common.collect.Multimap;
 import de.adesso.anki.AnkiConnector;
 import de.adesso.anki.MessageListener;
 import de.adesso.anki.NotificationListener;
-import de.adesso.anki.NotificationReader;
 import de.adesso.anki.Vehicle;
 import de.adesso.anki.messages.Message;
 
@@ -114,6 +113,7 @@ public class AnkiConnectorNodeJS implements AnkiConnector {
     }
 
     @SuppressWarnings("unchecked")
+    @Override
     public void fireMessageReceived(Vehicle vehicle, Message message) {
         for (MessageListener l : messageListeners.get(vehicle)) {
             l.messageReceived(message);

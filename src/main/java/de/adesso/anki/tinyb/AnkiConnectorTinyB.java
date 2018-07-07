@@ -9,6 +9,9 @@ import java.util.Map;
 
 import javax.xml.bind.DatatypeConverter;
 
+import com.google.common.collect.ArrayListMultimap;
+import com.google.common.collect.Multimap;
+
 import de.adesso.anki.AnkiConnector;
 import de.adesso.anki.MessageListener;
 import de.adesso.anki.Vehicle;
@@ -25,7 +28,8 @@ public class AnkiConnectorTinyB implements AnkiConnector {
     private static final short ANKI_MANUFACTURER_DATA_ID = -4162;
 
     private Map<String, BluetoothDevice> devices = new HashMap<>();
-
+    private Map<String, Vehicle> vehicles = new HashMap<>();
+    private Multimap<Vehicle, MessageListener<?>> messageListeners = ArrayListMultimap.create();
     private BluetoothManager manager;
 
     public AnkiConnectorTinyB() {
@@ -39,6 +43,7 @@ public class AnkiConnectorTinyB implements AnkiConnector {
             dev.remove();
         }
         devices.clear();
+        vehicles.clear();
     }
 
     @Override
@@ -55,7 +60,9 @@ public class AnkiConnectorTinyB implements AnkiConnector {
                 String manufacturerData = DatatypeConverter.printHexBinary(buffer.array());
                 String localName = DatatypeConverter.printHexBinary(dev.getName().getBytes());
 
-                foundVehicles.add(new Vehicle(this, address, manufacturerData, localName));
+                Vehicle vehicle = new Vehicle(this, address, manufacturerData, localName);
+                vehicles.put(address, vehicle);
+                foundVehicles.add(vehicle);
             }
         } catch (InterruptedException e) {
             // TODO Auto-generated catch block
@@ -86,8 +93,9 @@ public class AnkiConnectorTinyB implements AnkiConnector {
                 System.out.println("Connecting: " + ankiDev.getAddress());
                 connect(ankiDev);
                 BluetoothGattService ankiService = getAnkiService(ankiDev);
-                // getWriteChar(ankiService);
-                // getReadChar(ankiService);
+                if (ankiService == null) {
+                    throw new RuntimeException("Could not find Anki Service: " + ankiDev.getAddress());
+                }
                 disconnect(ankiDev);
 
             }
@@ -115,7 +123,7 @@ public class AnkiConnectorTinyB implements AnkiConnector {
         return devices;
     }
 
-    public void displayAnkiDevice(BluetoothDevice dev) throws InterruptedException {
+    private void displayAnkiDevice(BluetoothDevice dev) throws InterruptedException {
         System.out.println("Device: " + dev.getAddress());
         System.out.println("\tName: " + dev.getName());
         System.out.println("\tAlias: " + dev.getAlias());
@@ -188,11 +196,9 @@ public class AnkiConnectorTinyB implements AnkiConnector {
     public void connect(Vehicle vehicle) throws InterruptedException {
         BluetoothDevice device = getDevice(vehicle);
         connect(device);
-        // BluetoothGattService ankiService = getAnkiService(device);
-        // BluetoothGattCharacteristic readChar = getReadChar(ankiService);
-        // BluetoothNotification<byte[]> listener = new NotificationListener(vehicle,
-        // this);
-        // readChar.enableValueNotifications(listener);
+        BluetoothGattService ankiService = getAnkiService(device);
+        BluetoothGattCharacteristic readChar = getReadChar(ankiService);
+        readChar.enableValueNotifications(new BTNotificationListener(vehicle, this));
     }
 
     private void connect(BluetoothDevice device) throws InterruptedException {
@@ -298,27 +304,30 @@ public class AnkiConnectorTinyB implements AnkiConnector {
         return readChar;
     }
 
-    @Override
     public void addMessageListener(Vehicle vehicle, MessageListener<? extends Message> listener) {
-        // TODO Auto-generated method stub
-
+        messageListeners.put(vehicle, listener);
     }
 
-    @Override
     public void removeMessageListener(Vehicle vehicle, MessageListener<? extends Message> listener) {
-        // TODO Auto-generated method stub
-
+        messageListeners.remove(vehicle, listener);
     }
 
+    @SuppressWarnings("unchecked")
     @Override
     public void fireMessageReceived(Vehicle vehicle, Message message) {
-        // TODO Auto-generated method stub
-
+        for (MessageListener l : messageListeners.get(vehicle)) {
+            l.messageReceived(message);
+        }
     }
 
     @Override
     public void disconnect(Vehicle vehicle) {
         BluetoothDevice device = getDevice(vehicle);
+        BluetoothGattService ankiService = getAnkiService(device);
+        BluetoothGattCharacteristic readChar = getReadChar(ankiService);
+        if (readChar.getNotifying()) {
+            readChar.disableValueNotifications();
+        }
         disconnect(device);
     }
 
@@ -339,8 +348,8 @@ public class AnkiConnectorTinyB implements AnkiConnector {
 
     @Override
     public void close() {
-        for (BluetoothDevice dev : devices.values()) {
-            disconnect(dev);
+        for (Vehicle vehicle : vehicles.values()) {
+            disconnect(vehicle);
         }
         reset();
     }
