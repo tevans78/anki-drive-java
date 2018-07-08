@@ -46,7 +46,7 @@ public class AnkiTest extends HttpServlet {
 
 			StringBuilder builder = new StringBuilder();
 			builder.append("<html><head><title>Anki</title></head><body>");
-			builder.append("<form action=\"/AnkiTest\" method=\"post\">");
+			builder.append("<form action=\"\" method=\"post\">");
 			for (Vehicle v : vehicles) {
 				builder.append("<input type=\"radio\" name=\"address\" value=\"");
 				builder.append(v.getAddress());
