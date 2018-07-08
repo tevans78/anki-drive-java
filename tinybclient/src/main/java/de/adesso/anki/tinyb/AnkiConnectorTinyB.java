@@ -16,6 +16,7 @@ import de.adesso.anki.AnkiConnector;
 import de.adesso.anki.MessageListener;
 import de.adesso.anki.Vehicle;
 import de.adesso.anki.messages.Message;
+import de.adesso.anki.messages.SdkModeMessage;
 import tinyb.BluetoothDevice;
 import tinyb.BluetoothException;
 import tinyb.BluetoothGattCharacteristic;
@@ -61,6 +62,10 @@ public class AnkiConnectorTinyB implements AnkiConnector {
                 String localName = DatatypeConverter.printHexBinary(dev.getName().getBytes());
 
                 Vehicle vehicle = new Vehicle(this, address, manufacturerData, localName);
+                vehicle.connect();
+                SdkModeMessage sdk = new SdkModeMessage(true, (byte) 1);
+                vehicle.sendMessage(sdk);
+                vehicle.disconnect();
                 vehicles.put(address, vehicle);
                 foundVehicles.add(vehicle);
             }

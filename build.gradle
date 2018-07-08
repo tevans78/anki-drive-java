@@ -1,41 +1,119 @@
+group = 'io.openliberty.anki'
+version = '1.0-SNAPSHOT'
+description = "Anki Java App"
+
 buildscript {
   repositories {
     jcenter()
+    mavenCentral()
   }
-  /*
   dependencies {
     classpath 'com.moowork.gradle:gradle-node-plugin:0.13'
-  }*/
+    classpath 'net.wasdev.wlp.gradle.plugins:liberty-gradle-plugin:2.3'
+  }
 }
 
-apply plugin: 'java'
-//apply plugin: 'com.moowork.node'
-
-repositories {
-  jcenter()
+allprojects {
+	repositories {
+	  jcenter()
+	  mavenCentral()
+	}
 }
 
-dependencies {
-  compile 'org.reflections:reflections:0.9.10'
-  compile files('lib/tinyb.jar')
+//Common Project specific stuff
+project(':common') {
+    apply plugin: 'java'
+	dependencies {
+	  compile 'org.reflections:reflections:0.9.10'
+	}
 }
 
-/*
-node {
-  version = '4.4.7'
-  npmVersion = '3.10.5'
-  distBaseUrl = 'https://nodejs.org/dist'
-  download = true
 
-  workDir = file("${project.buildDir}/nodejs")
-  nodeModulesDir = file("${project.projectDir}")
-}
-*/
-
-task fatJar(type: Jar) {
-    baseName = project.name + '-all'
-    from { configurations.compile.collect { it.isDirectory() ? it : zipTree(it) } }
-    with jar
+//TinyB Project specific stuff
+project(':tinybclient') {
+    apply plugin: 'java'
+	dependencies {
+	  compile project(':common')
+	  compile files('lib/tinyb.jar')
+	}
 }
 
-//processResources.dependsOn(['npmInstall'])
+//AnkiTestWebApp Project specific stuff
+project(':AnkiTestWebApp') {
+	buildscript {
+	  repositories {
+	    mavenCentral()
+	  }
+	  dependencies {
+	    classpath 'net.wasdev.wlp.gradle.plugins:liberty-gradle-plugin:2.3'
+	  }
+	}
+
+    apply plugin: 'war'
+    apply plugin: 'liberty'
+	dependencies {
+	  compile project(':tinybclient')
+	  providedCompile group: 'javax.servlet', name: 'javax.servlet-api', version:'4.0.0'
+	  providedCompile group: 'javax.enterprise', name: 'cdi-api', version:'2.0'
+	  providedCompile group: 'javax.inject', name: 'javax.inject', version:'1'
+      libertyRuntime group: 'io.openliberty', name: 'openliberty-runtime', version: '[18.0.0.2,)'
+	}
+	
+	ext {
+	    appName = project.name
+	    testServerHttpPort = 9080
+	    testServerHttpsPort = 9443
+	    warContext = appName
+	}
+
+	liberty {
+	    server {
+	        name = "${appName}Server"
+	        configFile = file("src/main/liberty/config/server.xml")
+	        bootstrapProperties = ['default.http.port': testServerHttpPort,
+	                               'default.https.port': testServerHttpsPort,
+	                               'app.context.root': warContext,
+	                               'java.library.path': '/usr/local/lib']
+	        packageLiberty {
+	            archive = "$buildDir/${appName}.zip"
+	            include = "usr"
+	        }
+	    }
+	}
+
+	war {
+	    archiveName = "${baseName}.${extension}"
+	}
+	
+	clean.dependsOn 'libertyStop'
+	libertyPackage.dependsOn 'libertyStop'
+}
+
+//NodeJS Project specific stuff
+project(':nodeclient') {
+    apply plugin: 'java'
+	apply plugin: 'com.moowork.node'
+	
+	dependencies {
+	  compile project(':common')
+	}
+	
+	node {
+	  version = '4.4.7'
+	  npmVersion = '3.10.5'
+	  distBaseUrl = 'https://nodejs.org/dist'
+	  download = true
+	
+	  workDir = file("${project.buildDir}/nodejs")
+	  nodeModulesDir = file("${project.projectDir}")
+	}
+	
+	task fatJar(type: Jar) {
+	    baseName = project.name + '-all'
+	    from { configurations.compile.collect { it.isDirectory() ? it : zipTree(it) } }
+	    with jar
+	}
+	
+	processResources.dependsOn(['npmInstall'])
+
+}
