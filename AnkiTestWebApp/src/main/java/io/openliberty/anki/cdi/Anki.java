@@ -1,6 +1,6 @@
 package io.openliberty.anki.cdi;
 
-import java.util.Collection;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -14,7 +14,6 @@ import de.adesso.anki.messages.LightsPatternMessage.LightChannel;
 import de.adesso.anki.messages.LightsPatternMessage.LightConfig;
 import de.adesso.anki.messages.LightsPatternMessage.LightEffect;
 import de.adesso.anki.messages.Message;
-import de.adesso.anki.messages.MessageMap;
 import de.adesso.anki.messages.SetSpeedMessage;
 import de.adesso.anki.tinyb.AnkiConnectorTinyB;
 
@@ -66,8 +65,8 @@ public class Anki implements MessageListener<Message> {
 		System.out.println("Message! " + message);
 	}
 
-	public List<Vehicle> listVehicles() {
-		return anki.findVehicles();
+	public List<String> listVehicles() {
+		return new ArrayList<>(vehicles.keySet());
 	}
 
 	public void connect(String address) {

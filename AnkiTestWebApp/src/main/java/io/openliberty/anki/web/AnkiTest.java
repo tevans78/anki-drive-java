@@ -1,7 +1,6 @@
 package io.openliberty.anki.web;
 
 import java.io.IOException;
-import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
@@ -12,7 +11,6 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import de.adesso.anki.Vehicle;
 import de.adesso.anki.messages.Message;
 import de.adesso.anki.messages.MessageMap;
 import io.openliberty.anki.cdi.Anki;
@@ -64,16 +62,16 @@ public class AnkiTest extends HttpServlet {
 	private String getHTML() {
 		try {
 			Map<Integer, Class<? extends Message>> messageClasses = MessageMap.MESSAGES;
-			List<Vehicle> vehicles = anki.listVehicles();
+			List<String> vehicles = anki.listVehicles();
 
 			StringBuilder builder = new StringBuilder();
 			builder.append("<html><head><title>Anki</title></head><body>");
 			builder.append("<form action=\"\" method=\"post\">");
-			for (Vehicle v : vehicles) {
+			for (String v : vehicles) {
 				builder.append("<input type=\"radio\" name=\"address\" value=\"");
-				builder.append(v.getAddress());
+				builder.append(v);
 				builder.append("\"> ");
-				builder.append(v.getAddress());
+				builder.append(v);
 				builder.append("<br>");
 			}
 			builder.append("<input type=\"submit\" name=\"action\" value=\"Connect\">");
