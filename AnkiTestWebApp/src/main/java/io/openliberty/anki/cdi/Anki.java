@@ -1,7 +1,9 @@
 package io.openliberty.anki.cdi;
 
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import javax.enterprise.context.ApplicationScoped;
 
@@ -20,12 +22,18 @@ import de.adesso.anki.tinyb.AnkiConnectorTinyB;
 public class Anki implements MessageListener<Message> {
 
 	private AnkiConnectorTinyB anki = new AnkiConnectorTinyB();
+	private Map<String,Vehicle> vehicles = new HashMap<>();
 
+	public Anki() {
+		for(Vehicle v:anki.findVehicles()) {
+			vehicles.put(v.getAddress(), v);
+		}
+	}
+	
 	public void test() throws InterruptedException {
 
 		try {
-			List<Vehicle> vehicles = anki.findVehicles();
-			for (Vehicle v : vehicles) {
+			for (Vehicle v : vehicles.values()) {
 				if (v.getAddress().equals("EE:09:1D:49:59:FC")) {
 					v.connect();
 					v.addMessageListener(Message.class, this);
@@ -63,21 +71,11 @@ public class Anki implements MessageListener<Message> {
 	}
 
 	public void connect(String address) {
-		for (Vehicle v : anki.findVehicles()) {
-			if (v.getAddress().equals(address)) {
-				v.connect();
-				break;
-			}
-		}
+		vehicles.get(address).connect();
 	}
 	
 	public void disconnect(String address) {
-		for (Vehicle v : anki.findVehicles()) {
-			if (v.getAddress().equals(address)) {
-				v.disconnect();
-				break;
-			}
-		}
+		vehicles.get(address).disconnect();
 	}
 
 }

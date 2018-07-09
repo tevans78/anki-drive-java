@@ -41,6 +41,28 @@ public class AnkiTest extends HttpServlet {
 	protected void doGet(HttpServletRequest request, HttpServletResponse response)
 			throws ServletException, IOException {
 		try {
+			response.getWriter().println(getHTML());
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	}
+
+	protected void doPost(HttpServletRequest request, HttpServletResponse response)
+			throws ServletException, IOException {
+		String address = (String) request.getParameter("address");
+		String action = request.getParameter("action");
+		if(action.equals("Connect")) {
+			anki.connect(address);
+		}
+		else {
+			anki.disconnect(address);
+		}
+		doGet(request, response);
+	}
+	
+	private String getHTML() {
+		try {
 			Map<Integer, Class<? extends Message>> messageClasses = MessageMap.MESSAGES;
 			List<Vehicle> vehicles = anki.listVehicles();
 
@@ -68,23 +90,12 @@ public class AnkiTest extends HttpServlet {
 			builder.append("</form>");
 			builder.append("</body></html>");
 			
-			response.getWriter().println(builder.toString());
+			return builder.toString();
 
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
-		}
-	}
-
-	protected void doPost(HttpServletRequest request, HttpServletResponse response)
-			throws ServletException, IOException {
-		String address = (String) request.getParameter("address");
-		String action = request.getParameter("action");
-		if(action.equals("Connect")) {
-			anki.connect(address);
-		}
-		else {
-			anki.disconnect(address);
+			return e.toString();
 		}
 	}
 }
