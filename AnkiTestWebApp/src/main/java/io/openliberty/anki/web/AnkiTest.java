@@ -13,6 +13,7 @@ import javax.servlet.http.HttpServletResponse;
 
 import de.adesso.anki.messages.Message;
 import de.adesso.anki.messages.MessageMap;
+import de.adesso.anki.messages.SetSpeedMessage;
 import io.openliberty.anki.cdi.Anki;
 
 /**
@@ -50,8 +51,17 @@ public class AnkiTest extends HttpServlet {
 			throws ServletException, IOException {
 		String address = (String) request.getParameter("address");
 		String action = request.getParameter("action");
-		if(action.equals("Connect")) {
-			anki.connect(address);
+		if(action.equals("Send")) {
+			String messageType = request.getParameter("messageType");
+			Class<? extends Message> messageClass = MessageMap.getMessageClass(Integer.parseInt(messageType));
+			Message message = null;
+			if(messageClass == SetSpeedMessage.class) {
+				String speed = request.getParameter("SetSpeedMessage_speed");
+				String acceleration = request.getParameter("SetSpeedMessage_acceleration");
+				message = new SetSpeedMessage(Integer.parseInt(speed), Integer.parseInt(acceleration));
+			}
+			
+			anki.sendMessage(address, message);
 		}
 		else {
 			anki.disconnect(address);
@@ -74,8 +84,6 @@ public class AnkiTest extends HttpServlet {
 				builder.append(v);
 				builder.append("<br>");
 			}
-			builder.append("<input type=\"submit\" name=\"action\" value=\"Connect\">");
-			builder.append("<input type=\"submit\" name=\"action\" value=\"Disconnect\">");
 			
 			for (Map.Entry<Integer, Class<? extends Message>> clazz : messageClasses.entrySet()) {
 				builder.append("<input type=\"radio\" name=\"messageType\" value=\"");
@@ -83,7 +91,14 @@ public class AnkiTest extends HttpServlet {
 				builder.append("\"> ");
 				builder.append(clazz.getValue().getSimpleName());
 				builder.append("<br>");
+				if(clazz.getValue() == SetSpeedMessage.class) {
+					builder.append("Speed: <input type=\"text\" name=\"SetSpeedMessage_speed\" value=\"\">m/s<br>");
+					builder.append("Speed: <input type=\"text\" name=\"SetSpeedMessage_acceleration\" value=\"\">m/s/s<br>");
+				}
 			}
+			
+			builder.append("<input type=\"submit\" name=\"action\" value=\"Send\">");
+			builder.append("<input type=\"submit\" name=\"action\" value=\"Disconnect\">");
 			
 			builder.append("</form>");
 			builder.append("</body></html>");

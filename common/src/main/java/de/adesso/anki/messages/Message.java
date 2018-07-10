@@ -52,7 +52,7 @@ public class Message {
         return m;
     }
 
-    private static Message createByType(int type) {
+    public static Message createByType(int type) {
         Message message = null;
         Class<? extends Message> messageClass = MessageMap.getMessageClass(type);
         if (messageClass != null) {

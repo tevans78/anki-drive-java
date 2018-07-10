@@ -76,5 +76,11 @@ public class Anki implements MessageListener<Message> {
 	public void disconnect(String address) {
 		vehicles.get(address).disconnect();
 	}
+	
+	public void sendMessage(String address, Message message) {
+		Vehicle vehicle = vehicles.get(address);
+		vehicle.connect();
+		vehicles.get(address).sendMessage(message);
+	}
 
 }
